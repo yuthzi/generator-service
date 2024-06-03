@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuth.tower.dao.mapper.SysTableMapper">
+ 
+    <resultMap id="BaseResultMap" type="com.yuth.tower.dao.entity.SysTableDO" >
+        <id column="table_id" property="tableId" />
+        <result column="tenant_id" property="tenantId" /> 
+        <result column="table_name" property="tableName" /> 
+        <result column="entity_name" property="entityName" /> 
+        <result column="memo" property="memo" /> 
+        <result column="gmt_create" property="gmtCreate" /> 
+        <result column="gmt_modified" property="gmtModified" /> 
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        `table_id`,
+        `tenant_id`,
+        `table_name`,
+        `entity_name`,
+        `memo`,
+        `gmt_create`,
+        `gmt_modified`
+    </sql>
+    
+    <sql id="Base_Where">  
+        <where>
+            <trim prefixOverrides="and">
+                <if test="tenantId != null and tenantId != ''">and `tenant_id` = #{tenantId}</if>
+                <if test="tableName != null and tableName != ''">and `table_name` like concat('%', #{tableName}, '%')</if>
+                <if test="entityName != null and entityName != ''">and `entity_name` like concat('%', #{entityName}, '%')</if>
+                <if test="memo != null and memo != ''">and `memo` like concat('%', #{memo}, '%')</if>
+                <if test="gmtCreate != null">
+                  <foreach collection="gmtCreate" item="item" index="i">
+                    <if test="i==0">and `gmt_create` &gt;= #{item}</if>
+                    <if test="i==1">and `gmt_create` &lt; #{item}</if>
+                 </foreach>
+                </if>
+                <if test="gmtModified != null">
+                  <foreach collection="gmtModified" item="item" index="i">
+                    <if test="i==0">and `gmt_modified` &gt;= #{item}</if>
+                    <if test="i==1">and `gmt_modified` &lt; #{item}</if>
+                 </foreach>
+                </if>
+            </trim>
+        </where>
+    </sql>
+    
+    <!--查询单个-->
+    <select id="findById" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_sys_table
+        where
+        `table_id` = #{tableId}
+    </select>
+    
+    <select id="findByIds" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_sys_table
+        where table_id in
+        <foreach collection="list" separator="," open="(" close=")" item="item">#{item}</foreach>
+    </select>
+
+    <select id="findByCondition" resultMap="BaseResultMap" parameterType="com.yuth.tower.dao.entity.query.SysTableQueryDO" >   
+        select   
+        <include refid="Base_Column_List" />
+        from t_sys_table  
+        <include refid="Base_Where" /> 
+        order by table_id desc 
+    </select>
+
+    <!--新增指定列-->
+    <insert id="insert" parameterType="com.yuth.tower.dao.entity.SysTableDO">
+        insert into t_sys_table 
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            table_id,
+            <if test="tenantId != null and tenantId != ''">`tenant_id`,</if>
+            <if test="tableName != null and tableName != ''">`table_name`,</if>
+            <if test="entityName != null and entityName != ''">`entity_name`,</if>
+            <if test="memo != null and memo != ''">`memo`,</if>
+            <if test="gmtCreate != null and gmtCreate != ''">`gmt_create`,</if>
+            <if test="gmtModified != null and gmtModified != ''">`gmt_modified`</if>
+        </trim> 
+        values 
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #{tableId},
+            <if test="tenantId != null and tenantId != ''">#{tenantId},</if>
+            <if test="tableName != null and tableName != ''">#{tableName},</if>
+            <if test="entityName != null and entityName != ''">#{entityName},</if>
+            <if test="memo != null and memo != ''">#{memo},</if>
+            <if test="gmtCreate != null and gmtCreate != ''">#{gmtCreate},</if>
+            <if test="gmtModified != null and gmtModified != ''">#{gmtModified}</if>
+        </trim>
+    </insert>
+    
+    <insert id="batchInsert">
+        insert into t_sys_table 
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            table_id,             
+            `tenant_id`,
+            `table_name`,
+            `entity_name`,
+            `memo`,
+            `gmt_create`,
+            `gmt_modified`
+        </trim>
+        values 
+        <foreach collection="list" index="index" item="item" separator=",">  
+            (
+            #{item.tableId}, 
+            #{item.tenantId}, 
+            #{item.tableName}, 
+            #{item.entityName}, 
+            #{item.memo}, 
+            #{item.gmtCreate}, 
+            #{item.gmtModified} 
+            )
+        </foreach>
+    </insert>
+
+    <!--通过主键修改选择的数据-->
+    <update id="update" parameterType="com.yuth.tower.dao.entity.SysTableDO">
+        update t_sys_table
+        <set>
+            <if test="tenantId != null and tenantId != ''">`tenant_id` = #{tenantId},</if>
+            <if test="tableName != null and tableName != ''">`table_name` = #{tableName},</if>
+            <if test="entityName != null and entityName != ''">`entity_name` = #{entityName},</if>
+            <if test="memo != null and memo != ''">`memo` = #{memo},</if>
+            <if test="gmtCreate != null and gmtCreate != ''">`gmt_create` = #{gmtCreate},</if>
+            <if test="gmtModified != null and gmtModified != ''">`gmt_modified` = #{gmtModified},</if>
+        </set>
+        where
+            table_id = #{tableId}
+    </update>
+    
+    <update id="batchUpdate" parameterType="java.util.List">
+        <foreach close="" collection="list" item="item" open=""
+            separator=";">
+            update t_sys_table
+            <set>
+                <if test="item.tenantId != null and item.tenantId != ''">`tenant_id` = #{item.tenantId},</if>
+                <if test="item.tableName != null and item.tableName != ''">`table_name` = #{item.tableName},</if>
+                <if test="item.entityName != null and item.entityName != ''">`entity_name` = #{item.entityName},</if>
+                <if test="item.memo != null and item.memo != ''">`memo` = #{item.memo},</if>
+                <if test="item.gmtCreate != null and item.gmtCreate != ''">`gmt_create` = #{item.gmtCreate},</if>
+                <if test="item.gmtModified != null and item.gmtModified != ''">`gmt_modified` = #{item.gmtModified},</if>
+            </set>
+            where
+                table_id = #{item.tableId}
+        </foreach>
+    </update>
+    
+    
+    <insert id="insertOrUpdate" parameterType="com.yuth.tower.dao.entity.SysTableDO">
+        insert into t_sys_table (
+                table_id,             
+            `tenant_id`,
+            `table_name`,
+            `entity_name`,
+            `memo`,
+            `gmt_create`,
+            `gmt_modified`
+        ) 
+        values
+             (
+                #{tableId},             
+            #{tenantId}, 
+            #{tableName}, 
+            #{entityName}, 
+            #{memo}, 
+            #{gmtCreate}, 
+            #{gmtModified} 
+            )
+        on duplicate key update
+                `tenant_id` = VALUES(tenant_id),
+                `table_name` = VALUES(table_name),
+                `entity_name` = VALUES(entity_name),
+                `memo` = VALUES(memo),
+                `gmt_create` = VALUES(gmt_create),
+                `gmt_modified` = VALUES(gmt_modified)
+    </insert>
+    
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        insert into t_sys_table (
+                table_id,             
+            `tenant_id`,
+            `table_name`,
+            `entity_name`,
+            `memo`,
+            `gmt_create`,
+            `gmt_modified`
+        ) 
+        values
+        <foreach collection="list" item="item" index="index"
+            separator=",">
+             (
+                #{item.tableId},             
+            #{item.tenantId}, 
+            #{item.tableName}, 
+            #{item.entityName}, 
+            #{item.memo}, 
+            #{item.gmtCreate}, 
+            #{item.gmtModified} 
+            )
+        </foreach>
+        on duplicate key update
+                `tenant_id` = VALUES(tenant_id),
+                `table_name` = VALUES(table_name),
+                `entity_name` = VALUES(entity_name),
+                `memo` = VALUES(memo),
+                `gmt_create` = VALUES(gmt_create),
+                `gmt_modified` = VALUES(gmt_modified)
+    </insert>
+
+    <!--通过主键删除-->
+    <delete id="delete">
+        delete from t_sys_table 
+        where
+            table_id = #{tableId}
+    </delete>
+    
+    <delete id="batchDelete">
+        delete
+        from t_sys_table
+            where table_id in
+            <foreach collection="list" separator="," open="(" close=")" item="item">#{item}</foreach>
+    </delete>
+
+</mapper>
