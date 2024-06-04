@@ -5,10 +5,11 @@
 	"dbPassword": "1234567",
 	"tableSchema": "db_sc_tower",
 	"tables": [
-		"t_sys_table"
+		"t_goods_sku"
 	],
 	"typeMappingPath": "/TypeMapping.xml",
 	"format": true,
+	"writeFile": true,
 	"author": "yuth",
 	"tableRemovePre": "t_",
 	"basePackage0": "com.yuth.tower",
@@ -31,29 +32,87 @@
 	},
 	"templates": [
 		{
+			"desc": "sql.data.menu",
+			"name": "SQL.Menu",
+			"templatePath": "template/backend/sql.data.menu.vm",
+			"savePath": "${backend.dir}/${backend.service}-dao/sql/tmp/${tableName}_menu_data.sql"
+		},
+		{
+			"desc": "api实体",
+			"name": "ApiModel",
+			"templatePath": "template/backend/api.model.java.vm",
+			"packagePath": "${backend.package.prefix}.service.model",
+			"savePath": "${backend.dir}/${backend.service}-api/src/main/java/${packagePath}/${entityName}Model.java"
+		},
+		{
+			"desc": "api 查询实体",
+			"name": "ApiQuery",
+			"templatePath": "template/backend/api.query.java.vm",
+			"packagePath": "${backend.package.prefix}.service.model.query",
+			"savePath": "${backend.dir}/${backend.service}-api/src/main/java/${packagePath}/${entityName}Query.java"
+		},
+		{
+			"desc": "api响应实体",
+			"name": "ApiRsp",
+			"templatePath": "template/backend/api.rsp.java.vm",
+			"packagePath": "${backend.package.prefix}.service.model.rsp",
+			"savePath": "${backend.dir}/${backend.service}-api/src/main/java/${packagePath}/${entityName}Rsp.java"
+		},
+		{
+			"desc": "api service",
+			"name": "Service",
+			"templatePath": "template/backend/api.service.java.vm",
+			"packagePath": "${backend.package.prefix}.service.api",
+			"savePath": "${backend.dir}/${backend.service}-api/src/main/java/${packagePath}/${entityName}Service.java"
+		},
+		{
+			"desc": "impl service",
+			"name": "ServiceImpl",
+			"templatePath": "template/backend/impl.service.java.vm",
+			"packagePath": "${backend.package.prefix}.service.impl",
+			"savePath": "${backend.dir}/${backend.service}-service/src/main/java/${packagePath}/${entityName}ServiceImpl.java"
+		},
+		{
+			"desc": "impl factory",
+			"name": "Factory",
+			"templatePath": "template/backend/impl.factory.java.vm",
+			"packagePath": "${backend.package.prefix}.service.factory",
+			"savePath": "${backend.dir}/${backend.service}-service/src/main/java/${packagePath}/${entityName}Factory.java"
+		},
+		{
+			"desc": "controller",
+			"name": "Controller",
+			"templatePath": "template/backend/web.controller.java.vm",
+			"packagePath": "${backend.package.prefix}.web.controller",
+			"savePath": "${backend.dir}/${backend.service}-web/src/main/java/${packagePath}/${entityName}Controller.java"
+		},
+		{
 			"desc": "front-api-type",
+			"name": "FrontType",
 			"templatePath": "template/front/front-api-type.vm",
 			"savePath": "${front.dir}/src/api/${front.package.prefix}${entityFolder}/type.ts"
 		},
 		{
-			"desc": "front-api-index",
+			"desc": "front-api",
+			"name": "FrontApi",
 			"templatePath": "template/front/front-api-index.vm",
 			"savePath": "${front.dir}/src/api/${front.package.prefix}${entityFolder}/api.ts"
 		},
 		{
 			"desc": "front-view-edit-dialog",
+			"name": "FrontEditDialog",
 			"templatePath": "template/front/front-view-edit-dialog.vm",
-			"fileSuffix": ".vue",
-			"packagePath": "",
 			"savePath": "${front.dir}/src/views/${entityFolder}/components/${entityName}EditDialog.vue"
 		},
 		{
 			"desc": "front-view-index",
+			"name": "FrontListIndex",
 			"templatePath": "template/front/front-view-index.vm",
 			"savePath": "${front.dir}/src/views/${entityFolder}/index.vue"
 		},
 		{
 			"desc": "front-router",
+			"name": "FrontRouter",
 			"templatePath": "template/front/front-router.vm",
 			"fileSuffix": ".ts",
 			"packagePath": "",

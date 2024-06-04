@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yuth.tower.service.api.SysTableService;
 import com.yuth.tower.service.model.SysTableModel;
 import com.yuth.tower.service.model.query.SysTableQuery;
+import com.yuth.tower.service.model.rsp.CodeGenRsp;
 import com.yuth.tower.service.model.rsp.ResponseResult;
 import com.yuth.tower.service.model.rsp.ReturnList;
 import com.yuth.tower.service.model.rsp.SysTableRsp;
@@ -98,6 +99,13 @@ public class SysTableController {
     public ResponseResult<String> sync() {
         service.sync();
         return ResponseResult.ok("查询表信息列表成功！");
+    }
+
+    @ApiOperation("预览")
+    @GetMapping("/preview/{id}")
+    public ResponseResult<List<CodeGenRsp>> preview(@PathVariable("id") String tableId) {
+        List<CodeGenRsp> result = service.preview(tableId);
+        return ResponseResult.ok("预览成功！", result);
     }
 
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.yuth.tower.service.model.SysTableModel;
 import com.yuth.tower.service.model.query.SysTableQuery;
+import com.yuth.tower.service.model.rsp.CodeGenRsp;
 import com.yuth.tower.service.model.rsp.ReturnList;
 import com.yuth.tower.service.model.rsp.SysTableRsp;
 
@@ -36,4 +37,6 @@ public interface SysTableService {
     ReturnList<SysTableRsp> queryList(SysTableQuery model);
 
     void sync();
+
+    List<CodeGenRsp> preview(String tableId);
 }
