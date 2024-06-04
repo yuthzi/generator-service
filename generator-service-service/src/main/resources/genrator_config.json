@@ -32,6 +32,33 @@
 	},
 	"templates": [
 		{
+			"desc": "dao实体",
+			"name": "DO实体",
+			"templatePath": "template/backend/db.entity.java.vm",
+			"packagePath": "${backend.package.prefix}.dao.entity",
+			"savePath": "${backend.dir}/${backend.service}-dao/src/main/java/${packagePath}/${entityName}DO.java"
+		},
+		{
+			"desc": "dao查询实体",
+			"name": "DO查询参数",
+			"templatePath": "template/backend/db.queryDO.java.vm",
+			"packagePath": "${backend.package.prefix}.dao.entity.query",
+			"savePath": "${backend.dir}/${backend.service}-dao/src/main/java/${packagePath}/${entityName}QueryDO.java"
+		},
+		{
+			"desc": "dao mapper接口",
+			"name": "mapper接口",
+			"templatePath": "template/backend/db.mapper.java.vm",
+			"packagePath": "${backend.package.prefix}.dao.mapper",
+			"savePath": "${backend.dir}/${backend.service}-dao/src/main/java/${packagePath}/${entityName}Mapper.java"
+		},
+		{
+			"desc": "dao mapper xml",
+			"name": "mapper xml",
+			"templatePath": "template/backend/db.mapper.xml.vm",
+			"savePath": "${backend.dir}/${backend.service}-dao/src/main/resources/mappers/${entityName}Mapper.xml"
+		},
+		{
 			"desc": "sql.data.menu",
 			"name": "SQL.Menu",
 			"templatePath": "template/backend/sql.data.menu.vm",
