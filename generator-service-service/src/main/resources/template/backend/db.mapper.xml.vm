@@ -1,0 +1,253 @@
+##定义初始变量
+#set($doName = $tool.append($!{tableInfo.savePackageName}, ".dao.entity.", $!{tableInfo.name}, "DO"))
+#set($doQueryName = $tool.append($!{tableInfo.savePackageName}, ".dao.entity.query.", $!{tableInfo.name}, "QueryDO"))
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+##
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="$!{tableInfo.savePackageName}.dao.mapper.$!{tableInfo.name}Mapper">
+ 
+    <resultMap id="BaseResultMap" type="$!{doName}" >
+    #foreach($column in $tableInfo.pkColumn)
+        <id column="$!column.obj.name" property="$!column.name" />
+    #end
+    #foreach($column in $tableInfo.otherColumn)
+        <result column="$!column.obj.name" property="$!column.name" /> 
+    #end
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        #foreach($column in $tableInfo.fullColumn) 
+        `$!{column.obj.name}`#if($foreach.hasNext),#end
+        #end
+    </sql>
+    
+    <sql id="Base_Where">  
+        <where>
+            <trim prefixOverrides="and">
+            #foreach($column in $tableInfo.otherColumn)
+                #if(($!column.obj.getDataType().getSpecification().startsWith("varchar")))
+                <if test="$!column.name != null#if($column.type.equals("java.lang.String")) and $!column.name != ''#end">and `$!column.obj.name` like concat('%', #{$!{column.name}}, '%')</if>
+                #elseif($column.name.startsWith("$timeKey") || $column.name.endsWith("$timeKey"))
+                <if test="$column.name != null">
+                  <foreach collection="$column.name" item="item" index="i">
+                    <if test="i==0">and `$!column.obj.name` &gt;= #{item}</if>
+                    <if test="i==1">and `$!column.obj.name` &lt; #{item}</if>
+                 </foreach>
+                </if>
+                #else
+                <if test="$!column.name != null#if($column.type.equals("java.lang.String")) and $!column.name != ''#end">and `$!column.obj.name` = #{$!{column.name}}</if>
+                #end
+            #end    
+            </trim>
+        </where>
+    </sql>
+    
+    <!--查询单个-->
+    <select id="findById" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from $!tableInfo.obj.name
+        where
+        #foreach($column in $tableInfo.pkColumn)
+        `$!column.obj.name` = #{$!column.name}
+        #if($foreach.hasNext)and #end            
+        #end
+    </select>
+    
+    <select id="findByIds" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from $!tableInfo.obj.name
+        #if($tableInfo.pkColumn.size()==1)
+        where $!pk.obj.name in
+        <foreach collection="list" separator="," open="(" close=")" item="item">#{item}</foreach>
+        #end
+        #if($tableInfo.pkColumn.size()>1)
+            where 
+            (#foreach($column in $tableInfo.pkColumn)
+                $!column.obj.name#if($foreach.hasNext), #end            
+            #end) 
+            in
+            <foreach collection="list" separator="," open="(" close=")" item="item">
+            (#foreach($column in $tableInfo.pkColumn)
+                #{item.$!column.name}#if($foreach.hasNext), #end            
+            #end)
+            </foreach>
+        #end
+    </select>
+
+    <select id="findByCondition" resultMap="BaseResultMap" parameterType="$doQueryName" >   
+        select   
+        <include refid="Base_Column_List" />
+        from $!tableInfo.obj.name  
+        <include refid="Base_Where" /> 
+        order by $!{pk.obj.name} desc 
+    </select>
+
+    <!--新增指定列-->
+    <insert id="insert" parameterType="$!{doName}">
+        insert into $!{tableInfo.obj.name} 
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #foreach($column in $tableInfo.pkColumn)
+            $!column.obj.name,
+            #end
+            #foreach($column in $tableInfo.otherColumn) 
+            <if test="$!column.name != null#if($column.type.equals("java.lang.String")) and $!column.name != ''#end">`$!column.obj.name`#if($foreach.hasNext),#end</if>
+            #end
+        </trim> 
+        values 
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #foreach($column in $tableInfo.pkColumn)
+            #{$!column.name},
+            #end
+            #foreach($column in $tableInfo.otherColumn)
+            <if test="$!column.name != null#if($column.type.equals("java.lang.String")) and $!column.name != ''#end">#{$!{column.name}}#if($foreach.hasNext),#end</if>
+            #end
+        </trim>
+    </insert>
+    
+    <insert id="batchInsert">
+        insert into $!{tableInfo.obj.name} 
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #foreach($column in $tableInfo.pkColumn)
+            $!column.obj.name,             
+            #end
+            #foreach($column in $tableInfo.otherColumn)
+            `$!{column.obj.name}`#if($foreach.hasNext),#end
+            #end
+        </trim>
+        values 
+        <foreach collection="list" index="index" item="item" separator=",">  
+            (
+        #foreach($column in $tableInfo.pkColumn)
+            #{item.$!{column.name}}, 
+        #end
+        #foreach($column in $tableInfo.otherColumn)
+            #{item.$!{column.name}}#if($foreach.hasNext),#end 
+        #end
+            )
+        </foreach>
+    </insert>
+
+    <!--通过主键修改选择的数据-->
+    <update id="update" parameterType="$!{doName}">
+        update $!{tableInfo.obj.name}
+        <set>
+            #foreach($column in $tableInfo.otherColumn)
+            <if test="$!column.name != null#if($column.type.equals("java.lang.String")) and $!column.name != ''#end">`$!column.obj.name` = #{$!column.name},</if>
+            #end
+        </set>
+        where
+        #foreach($column in $tableInfo.pkColumn)
+            $!column.obj.name = #{$!column.name}
+            #if($foreach.hasNext) 
+            and #end            
+        #end
+    </update>
+    
+    <update id="batchUpdate" parameterType="java.util.List">
+        <foreach close="" collection="list" item="item" open=""
+            separator=";">
+            update $!{tableInfo.obj.name}
+            <set>
+                #foreach($column in $tableInfo.otherColumn)
+                <if test="item.$!{column.name} != null#if($column.type.equals("java.lang.String")) and item.$!{column.name} != ''#end">`$!column.obj.name` = #{item.$!{column.name}},</if>
+                #end
+            </set>
+            where
+            #foreach($column in $tableInfo.pkColumn)
+                $!column.obj.name = #{item.$!column.name}
+                #if($foreach.hasNext) and #end            
+            #end
+        </foreach>
+    </update>
+    
+    
+    <insert id="insertOrUpdate" parameterType="$!{doName}">
+        insert into $!{tableInfo.obj.name} (
+            #foreach($column in $tableInfo.pkColumn)
+                $!column.obj.name,             
+            #end
+            #foreach($column in $tableInfo.otherColumn)
+            `$!{column.obj.name}`#if($foreach.hasNext),#end
+            #end
+        ) 
+        values
+             (
+             #foreach($column in $tableInfo.pkColumn)
+                #{$!column.name},             
+            #end
+            #foreach($column in $tableInfo.otherColumn)
+            #{$!{column.name}}#if($foreach.hasNext),#end 
+            #end
+            )
+        on duplicate key update
+            #foreach($column in $tableInfo.otherColumn)
+                `$!{column.obj.name}` = VALUES($!{column.obj.name})#if($foreach.hasNext),#end
+            #end
+    </insert>
+    
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        insert into $!{tableInfo.obj.name} (
+            #foreach($column in $tableInfo.pkColumn)
+                $!column.obj.name,             
+            #end
+            #foreach($column in $tableInfo.otherColumn)
+            `$!{column.obj.name}`#if($foreach.hasNext),#end
+            #end
+        ) 
+        values
+        <foreach collection="list" item="item" index="index"
+            separator=",">
+             (
+            #foreach($column in $tableInfo.pkColumn)
+                #{item.$!column.name},             
+            #end
+            #foreach($column in $tableInfo.otherColumn)
+            #{item.$!{column.name}}#if($foreach.hasNext),#end 
+            #end
+            )
+        </foreach>
+        on duplicate key update
+            #foreach($column in $tableInfo.otherColumn)
+                `$!{column.obj.name}` = VALUES($!{column.obj.name})#if($foreach.hasNext),#end
+            #end
+    </insert>
+
+    <!--通过主键删除-->
+    <delete id="delete">
+        delete from $!{tableInfo.obj.name} 
+        where
+        #foreach($column in $tableInfo.pkColumn)
+            $!column.obj.name = #{$!column.name}
+            #if($foreach.hasNext) 
+            and #end            
+        #end
+    </delete>
+    
+    <delete id="batchDelete">
+        delete
+        from $!{tableInfo.obj.name}
+        #if($tableInfo.pkColumn.size()==1)
+            where $!pk.obj.name in
+            <foreach collection="list" separator="," open="(" close=")" item="item">#{item}</foreach>
+        #end
+        #if($tableInfo.pkColumn.size()>1)
+            where 
+            (#foreach($column in $tableInfo.pkColumn)
+                $!column.obj.name#if($foreach.hasNext), #end            
+            #end) 
+            in
+            <foreach collection="list" separator="," open="(" close=")" item="item">
+            (#foreach($column in $tableInfo.pkColumn)
+                #{item.$!column.name}#if($foreach.hasNext), #end            
+            #end)
+            </foreach>
+        #end
+    </delete>
+
+</mapper>

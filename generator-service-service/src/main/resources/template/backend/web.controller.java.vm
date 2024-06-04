@@ -1,0 +1,110 @@
+##定义初始变量
+#set($tableName = $tool.append($tableInfo.name, "Controller"))
+#set($apiModelName = $tool.append($tableInfo.name, "Model"))
+#set($queryModelName = $tool.append($tableInfo.name, "Query"))
+#set($rspModelName = $tool.append($tableInfo.name, "Rsp"))
+#set($serviceName = $tool.append($tableInfo.name, "Service"))
+##
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+##
+package ${package};
+
+import java.util.List;
+
+import $!{tableInfo.savePackageName}.service.model.rsp.ResponseResult;
+import $!{tableInfo.savePackageName}.service.model.rsp.ReturnList;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
+
+import $!{tableInfo.savePackageName}.service.model.$!{apiModelName};
+import $!{tableInfo.savePackageName}.service.api.$!{serviceName};
+import $!{tableInfo.savePackageName}.service.model.rsp.${rspModelName};
+import $!{tableInfo.savePackageName}.service.model.query.${queryModelName};
+
+/**
+ * $!{tableInfo.comment}($!{tableInfo.name})表控制层
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+@Api(tags= "$!{tableInfo.comment}")
+@RestController
+@RequestMapping("/admin${tableInfo.url}")
+public class $!{tableName} {
+
+    @Autowired
+    private $!{serviceName} service;
+    
+   
+    @ApiOperation("添加$!{tableInfo.comment}")
+    @PostMapping("/add")
+    public ResponseResult<Integer> add$!{tableInfo.name}(@RequestBody $!{apiModelName} model) throws Exception {
+        
+        Integer result = service.add(model, true);  
+        return ResponseResult.ok("添加$!{tableInfo.comment}成功！", result);
+    }
+    
+    @ApiOperation("修改$!{tableInfo.comment}")
+    @PutMapping("/modify")
+    public ResponseResult<Integer> modify$!{tableInfo.name}(@RequestBody $!{apiModelName} model) throws Exception {
+        
+        int result = service.modify(model);
+        return ResponseResult.ok("修改$!{tableInfo.comment}成功！", result);
+    }   
+
+    @ApiOperation("批量修改或更新$!{tableInfo.comment}")
+    @PostMapping("/batAddOrModify")
+    public ResponseResult<Integer> batAddOrModify(@RequestBody List<$!{apiModelName}> models) throws Exception {
+        
+        int result = service.batchAddOrModify(models);
+        return ResponseResult.ok("批量修改或更新$!{tableInfo.comment}成功！", result);
+    }   
+    
+    @ApiOperation("移除$!{tableInfo.comment}")
+    @DeleteMapping("/remove/{id}")
+    public ResponseResult<Integer> remove$!{tableInfo.name}(@PathVariable("id") String $!{pkName}) throws Exception {
+        
+        int result = service.remove($!{pkName});    
+        return ResponseResult.ok("移除$!{tableInfo.comment}成功！", result);
+    }
+    
+    @ApiOperation("批量移除$!{tableInfo.comment}")
+    @DeleteMapping("/batchRemove")
+    public ResponseResult<Integer> batchRemove$!{tableInfo.name}(@RequestBody List<String> $!{pkName}s) throws Exception {
+        
+        int result = service.batchRemove($!{pkName}s);    
+        return ResponseResult.ok("移除$!{tableInfo.comment}成功！", result);
+    }
+    
+    @ApiOperation("查询$!{tableInfo.comment}列表")
+    @PostMapping("/list")
+    public ResponseResult<ReturnList<$!{tableInfo.name}Rsp>> query$!{tableInfo.name}List(@RequestBody $!{queryModelName} model) {
+        
+        ReturnList<$!{tableInfo.name}Rsp> result = service.queryList(model);
+        return ResponseResult.ok("查询$!{tableInfo.comment}列表成功！", result);
+    }
+    
+    @ApiOperation("查询指定ID的$!{tableInfo.comment}")
+    @GetMapping("/single/{id}")
+    public ResponseResult<$!{apiModelName}> querySingle$!{tableInfo.name}(@PathVariable("id") String $!{pkName}) throws Exception {
+        
+        $!{apiModelName} result = service.querySingle($!{pkName});
+        return ResponseResult.ok("查询指定$!{tableInfo.comment}成功！", result);
+    }
+}

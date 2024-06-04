@@ -1,0 +1,72 @@
+#set($doName = $tool.append($tableInfo.name, "DO"))
+#set($apiModelName = $tool.append($tableInfo.name, "Model"))
+#set($tableName = $tool.append($tableInfo.name, "Factory"))
+#set($queryModelName = $tool.append($tableInfo.name, "Query"))
+#set($rspModelName = $tool.append($tableInfo.name, "Rsp"))
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+
+#set($pkNameUp = $!tool.firstUpperCase($!{pk.name}))
+
+package ${package};
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.util.StringUtils;
+
+import $!{tableInfo.savePackageName}.service.model.$apiModelName;
+import $!{tableInfo.savePackageName}.dao.entity.$doName;
+import $!{tableInfo.savePackageName}.service.util.PropertyUtil;
+#if($tableInfo.pkColumn.size()==1)
+import $!{tableInfo.savePackageName}.service.util.PKUtil;
+#end
+
+/**
+ * $!{tableInfo.comment}($!{tableInfo.name})工厂类
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+public class $!{tableName} {
+    
+    #if($tableInfo.pkColumn.size()==1)
+    public static List<${doName}> createDOInsByModel(List<$apiModelName> list, boolean toGenId) {
+        return list.stream().map(e -> createDOIns(e, toGenId)).collect(Collectors.toList());
+    }
+    #end
+    
+    #if($tableInfo.pkColumn.size()==1)
+    public static List<${doName}> createDOInsByModel(List<$apiModelName> list) {
+        return list.stream().map(e -> createDOIns(e)).collect(Collectors.toList());
+    }
+    #end
+    
+    #if($tableInfo.pkColumn.size()==1)
+    public static $doName createDOIns($apiModelName model) {
+        return createDOIns(model, StringUtils.hasText(model.get$!{pkNameUp}()));
+    }
+    #end
+        
+    public static $doName createDOIns($apiModelName model #if($tableInfo.pkColumn.size()==1), boolean toGenId #end) {
+        $doName record = new $doName();
+        PropertyUtil.copyProperty(record, model);
+        #if($tableInfo.pkColumn.size()==1)
+        if (toGenId) {
+            buildId4Bean(record);
+            model.set$!{pkNameUp}(record.get$!{pkNameUp}());
+        }
+        #end
+
+        return record;
+    }
+        
+    #if($tableInfo.pkColumn.size()==1)
+    public static void buildId4Bean(Object obj) {
+        PKUtil.buildId4Bean(obj, "$!{pk.name}");
+    }
+    #end
+    
+}

@@ -1,0 +1,27 @@
+package $package;
+
+$tool.getColumnTypeImport($tableInfo.fullColumn)
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+/**
+ * $!{tableInfo.comment}($!{tableInfo.name})DO实体类
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+@Data
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor 
+public class $!{tableInfo.name}DO {
+
+#foreach($column in $tableInfo.fullColumn)
+    #if(${column.comment})
+    /** ${column.comment} */
+    #end
+    private $column.shortType $column.name;
+
+#end
+}

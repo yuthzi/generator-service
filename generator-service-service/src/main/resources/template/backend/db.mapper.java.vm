@@ -1,0 +1,100 @@
+##定义初始变量
+#set($doName = $tool.append($tableInfo.name, "DO"))
+#set($doQueryName = $tool.append($tableInfo.name, "QueryDO"))
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+package ${package};
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import $!{tableInfo.savePackageName}.dao.entity.$!{doName};
+import $!{tableInfo.savePackageName}.dao.entity.query.${doQueryName};
+
+/**
+ * $!{tableInfo.comment}($!{tableInfo.name})数据库访问层
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+@Mapper 
+public interface ${tableInfo.name}Mapper {
+
+    /**
+     * 根据主键删除记录
+     #foreach($column in $tableInfo.pkColumn)
+     * @param $!{column.name} 主键
+     #end
+     * @return 影响行数
+     */
+    int delete(#foreach($column in $tableInfo.pkColumn)
+            @Param("$!column.name") String $!column.name #if($velocityHasNext), #end  
+        #end);
+    
+    #if($tableInfo.pkColumn.size()==1)
+        int batchDelete(@Param("list") List<String> $!{pk.name}s);
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+        int batchDelete(@Param("list") List<$!{doName}> list);
+    #end
+    
+    
+    /**
+     * 根据主键查询
+     #foreach($column in $tableInfo.pkColumn)
+     * @param $!{column.name} 主键
+     #end
+     */
+    $!{doName} findById(#foreach($column in $tableInfo.pkColumn)
+            @Param("$!column.name") String $!column.name #if($velocityHasNext), #end  
+        #end);
+    
+    #if($tableInfo.pkColumn.size()==1)
+        List<$!{doName}> findByIds(@Param("list") List<String> $!{pk.name}s);
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+        List<$!{doName}> findByIds(@Param("list") List<$!{doName}> list);
+    #end
+    
+
+    /**
+     * 根据条件查询列表
+     */ 
+    List<$!{doName}> findByCondition(${doQueryName} query);
+
+    /**
+     * 插入选择的字段
+     * @return 影响行数
+     */
+    int insert($!{doName} record);
+    
+    /**
+     * 批量插入所有字段
+     * @return 影响行数
+     */
+    int batchInsert(List<$!{doName}> list);
+
+    /**
+     * 根据主键更新选择的字段
+     * @return 影响行数
+     */
+    int update($!{doName} record);
+   
+    /**
+     * 批量更新
+     * @return 影响行数
+     */
+    int batchUpdate(List<$!{doName}> list);
+    
+    /**
+     * 批量根据主键插入或者更新
+     * @return 影响行数
+     */
+    int batchInsertOrUpdate(List<$!{doName}> list);
+
+}

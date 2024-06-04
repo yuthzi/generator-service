@@ -1,0 +1,183 @@
+##定义初始变量
+#set($entityName = $tableInfo.name)
+#set($pathName = $tool.firstLowerCase($!{entityName}))
+#set($comment = $!{tableInfo.comment})
+## -------------------------------------
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+## -------------------------------------
+## sortable
+#macro(getSortable $c)
+#if($c.startsWith("$timeKey") || $c.endsWith("$timeKey"))sortable: true,#end
+#end
+## -------------------------------------
+<!-- ${comment}管理视图页面 -->
+<template>
+  <div>
+    <ProTable
+      ref="proTable"
+      :selectId="'$pkName'"
+      :columns="columns"
+      :requestApi="get${entityName}List"
+      :dataCallback="dataCallback"
+    >
+      <!-- Expand -->
+      <template #tableHeader>
+        <Auth :value="['btn.${entityName}.add']">
+          <el-button type="primary" icon="Plus" @click="openDialog('新增')">
+            添加
+          </el-button>
+        </Auth>
+      </template>
+      <!-- 表格操作 -->
+      <template #operation="scope">
+        <Auth :value="['btn.${entityName}.update']">
+          <el-button
+            type="primary"
+            link
+            icon="Edit"
+            @click="openDialog('编辑', scope.row)"
+          >
+            编辑
+          </el-button>
+        </Auth>
+        <Auth :value="['btn.${entityName}.remove']">
+          <el-button
+            type="primary"
+            link
+            icon="Delete"
+            @click="handleDelete(scope.row)"
+          >
+            删除
+          </el-button>
+        </Auth>
+      </template>
+    </ProTable>
+    <${entityName}EditDialog ref="DialogRef" />
+  </div>
+</template>
+
+<script setup lang="tsx">
+import { ref } from 'vue'
+import {
+  get${entityName}List,
+  add${entityName},
+  update${entityName},
+  delete${entityName}ById,
+} from '@/api/${tableInfo.entityFolder}/api'
+import type { ${entityName} } from '@/api/${tableInfo.entityFolder}/type'
+import { ColumnProps } from '@/components/ProTable/src/types'
+import { useHandleData } from '@/hooks/useHandleData'
+import { dataCallback } from '@/utils/pagination'
+import ${entityName}EditDialog from './components/${entityName}EditDialog.vue'
+
+#foreach($column in $tableInfo.otherColumn)
+  #if (!($column.name.equals("$tenantIdKey"))) 
+  	#if($tool.isSwitch($column.comment))
+const onChange$tool.firstUpperCase($column.name) = async (val: boolean, row: ${entityName}.Res${entityName}List) => {
+  const params: any = {
+    $pkName: row.$pkName,
+    $column.name: val ? 1 : 0,
+  }
+  await useHandleData(
+    update${entityName},
+    params,
+    val ? `启用` : `禁用`,
+  )
+}
+  	#end
+  #end
+#end
+
+// *表格配置项
+const columns: ColumnProps[] = [
+  { type: 'index', label: '#', width: 80 },
+  { prop: '${pkName}', label: 'id' },
+#foreach($column in $tableInfo.otherColumn)
+  #if (!($column.name.equals("$tenantIdKey"))) 
+  	#if($column.comment.contains("名") || $column.comment.contains("电话"))
+  {
+    prop: '$column.name',
+    label: '$tool.getFieldDesc($column.comment)',
+    search: { el: 'input', key: '$column.name' },
+  },
+    #elseif($tool.isSwitch($column.comment))
+  {
+    type: 'switch',
+    prop: '$column.name',
+    label: '$tool.getFieldDesc($column.comment)',
+    onChange: onChange$tool.firstUpperCase($column.name),
+    activeValue: 1,
+    inactiveValue: 0,
+     enum: [
+      #foreach($v in $tool.parseValue($column.comment))
+      {
+        value: $v.key,
+        label: '$v.value',
+      },
+      #end
+    ],
+     search: { el: 'select', key: '$column.name' },
+  }, 
+    #elseif($tool.isMulti($column.comment))
+  {
+    prop: '$column.name',
+    label: '$tool.getFieldDesc($column.comment)',
+    enum: [
+      #foreach($v in $tool.parseValue($column.comment))
+      {
+        value: $v.key,
+        label: '$v.value',
+      },
+      #end
+    ],
+    search: { el: 'select', key: '$column.name' },
+  }, 
+    #elseif($$column.name.startsWith("$timeKey") || $$column.name.endsWith("$timeKey"))
+  {
+    prop: '$column.name',
+    label: '$tool.getFieldDesc($column.comment)',
+    #getSortable($column.name)
+    search: { el: 'date-range-picker', isElement: false, key: '$column.name'},
+  }, 
+  	#else
+  { prop: '$column.name', label: '$tool.getFieldDesc($column.comment)'#getSortable($column.name) },
+  	#end
+  #end
+#end
+  { prop: 'operation', label: '操作', fixed: 'right', width: 200 },
+]
+
+// 打开Dialog
+const DialogRef = ref()
+const openDialog = (
+  title: string,
+  rowData: Partial<${entityName}.Res${entityName}List> = {},
+) => {
+  const params = {
+    title: title,
+    rowData: { ...rowData },
+    api: title === '新增' ? add${entityName} : update${entityName},
+    getTableList: proTable.value.getTableList,
+  }
+  DialogRef.value.acceptParams(params)
+}
+
+// *获取 ProTable 元素，调用其获取刷新数据方法
+const proTable = ref()
+
+// *根据id删除
+const handleDelete = async (row: ${entityName}.Res${entityName}List) => {
+  await useHandleData(
+    delete${entityName}ById,
+    row.$pkName,
+    `删除${esc.d}{row.${pathName}Name}`,
+  )
+  proTable.value.getTableList()
+}
+</script>
+
+<style  lang="scss" scoped></style>

@@ -1,0 +1,178 @@
+##定义初始变量
+#set($tableName = $tool.append($tableInfo.name, "ServiceImpl"))
+#set($doName = $tool.append($tableInfo.name, "DO"))
+#set($doQueryName = $tool.append($tableInfo.name, "QueryDO"))
+#set($apiModelName = $tool.append($tableInfo.name, "Model"))
+#set($queryModelName = $tool.append($tableInfo.name, "Query"))
+#set($rspModelName = $tool.append($tableInfo.name, "Rsp"))
+#set($factoryName = $tool.append($tableInfo.name, "Factory"))
+
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+
+package ${package};
+
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import $!{tableInfo.savePackageName}.service.model.rsp.ReturnList;
+import com.github.pagehelper.Page;
+import $!{tableInfo.savePackageName}.service.model.$!{apiModelName};
+import $!{tableInfo.savePackageName}.service.model.rsp.$!{rspModelName};
+import $!{tableInfo.savePackageName}.service.model.query.$!{queryModelName};
+
+import $!{tableInfo.savePackageName}.service.api.$!{tableInfo.name}Service;
+import $!{tableInfo.savePackageName}.dao.entity.$!{tableInfo.name}DO;
+import $!{tableInfo.savePackageName}.dao.entity.query.${doQueryName};
+import $!{tableInfo.savePackageName}.dao.mapper.$!{tableInfo.name}Mapper;
+import $!{tableInfo.savePackageName}.service.factory.$!{tableInfo.name}Factory;
+import $!{tableInfo.savePackageName}.service.util.Const;
+
+import $!{tableInfo.savePackageName}.service.util.PageUtil;
+import $!{tableInfo.savePackageName}.service.util.PropertyUtil;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * $!{tableInfo.comment}($!{tableInfo.name})服务实现类
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+@Service
+@RequiredArgsConstructor
+public class $!{tableName} implements $!{tableInfo.name}Service {
+   
+    private final $!{tableInfo.name}Mapper mapper;
+    
+    @Override
+    public int add($!{apiModelName} model #if($tableInfo.pkColumn.size()==1) , boolean toGenId #end) {
+        if (model == null) {
+            return Const.DBSingleSuccess.NO;
+        }
+
+        $!{doName} record = $!{factoryName}.createDOIns(model #if($tableInfo.pkColumn.size()==1) , toGenId #end);
+        return mapper.insert(record);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = { Exception.class })
+    public int batchAdd(List<$!{apiModelName}> models #if($tableInfo.pkColumn.size()==1) , boolean toGenId #end) {
+        if (models == null || models.isEmpty()) {
+            return Const.DBSingleSuccess.NO;
+        }
+        
+        List<$!{doName}> records = $!{factoryName}.createDOInsByModel(models #if($tableInfo.pkColumn.size()==1) ,  toGenId #end);
+        return mapper.batchInsert(records);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = { Exception.class })
+    public int batchAddOrModify(List<$!{apiModelName}> models) {
+        if (models == null || models.isEmpty()) {
+            return Const.DBBatchSize.EMPTY;
+        }
+        
+        List<$!{doName}> records = $!{factoryName}.createDOInsByModel(models);
+        return mapper.batchInsertOrUpdate(records);
+    }
+
+    @Override
+    public int modify($!{apiModelName} model) {
+        $!{doName} record = PropertyUtil.createIns(model, $!{doName}.class);
+        return mapper.update(record);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = { Exception.class })
+    public int batchModify(List<$!{apiModelName}> models) {
+        if (models == null || models.isEmpty()) {
+            return Const.DBBatchSize.EMPTY;
+        }
+        
+        List<$!{doName}> records = PropertyUtil.createIns(models, $!{doName}.class);
+        return mapper.batchUpdate(records);
+    }
+    
+    @Override
+    public int remove(#foreach($column in $tableInfo.pkColumn)
+           String $!column.name #if($velocityHasNext), #end  
+        #end) {
+        return mapper.delete(#foreach($column in $tableInfo.pkColumn)
+           $!column.name #if($velocityHasNext), #end  
+        #end);
+    }
+    
+    @Override
+    #if($tableInfo.pkColumn.size()==1)
+    public int batchRemove(List<String> $!{pkName}s) {
+        if ($!{pkName}s == null || $!{pkName}s.isEmpty()) {
+            return Const.DBBatchSize.EMPTY;
+        }
+        
+        return mapper.batchDelete($!{pkName}s);
+    }    
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+    public int batchRemove(List<$!{apiModelName}> list) {
+        if (list.isEmpty()) {
+            return Const.DBBatchSize.EMPTY;
+        }
+        
+        List<$!{doName}> records = PropertyUtil.createIns(list, $!{doName}.class);
+        return mapper.batchDelete(records);
+    }    
+    #end
+    
+    @Override
+    public $!{apiModelName} querySingle(#foreach($column in $tableInfo.pkColumn)
+           String $!column.name #if($velocityHasNext), #end  
+        #end) {
+        $!{doName} record = mapper.findById(#foreach($column in $tableInfo.pkColumn)
+           $!column.name #if($velocityHasNext), #end  
+        #end);
+        
+        return PropertyUtil.createIns(record, $!{apiModelName}.class);
+    }
+
+    
+    @Override
+    #if($tableInfo.pkColumn.size()==1)
+    public List<$!{apiModelName}> queryByIds(List<String> $!{pkName}s) {
+        if ($!{pkName}s == null || $!{pkName}s.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<$!{doName}> records = mapper.findByIds($!{pkName}s);
+        return PropertyUtil.createIns(records, $!{apiModelName}.class);
+    }
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+    public List<$!{apiModelName}> queryByIds(List<$!{apiModelName}> list) {
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        List<$!{doName}> ids = $!{factoryName}.createDOInsByModel(list #if($tableInfo.pkColumn.size()==1) , toGenId #end);
+        List<$!{doName}> records = mapper.findByIds(ids);
+        return $!{factoryName}.createModelInsByDO(records);
+    }    
+    #end
+    
+    @Override
+    public ReturnList<$!{rspModelName}> queryList($!{queryModelName} model) {
+        $doQueryName queryDO = PropertyUtil.createIns(model, $doQueryName .class);
+        Page<$!{rspModelName}> page = PageUtil.preparePage(model);
+        List<$!{doName}> list  = mapper.findByCondition(queryDO);
+        List<$!{rspModelName}> rspList = PropertyUtil.createIns(list, $!{rspModelName}.class);
+
+        return PageUtil.newRet(page, rspList);
+    }
+   
+}

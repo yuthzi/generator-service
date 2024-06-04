@@ -1,0 +1,45 @@
+package ${package};
+
+$tool.getColumnTypeImport($tableInfo.fullColumn)
+##
+## import List
+#foreach($column in $tableInfo.fullColumn)
+    #if($column.name.startsWith("$timeKey") || $column.name.endsWith("$timeKey"))
+import java.util.List;
+    #break;
+    #end
+#end
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+/**
+ * $!{tableInfo.comment}查询模型
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+@Data
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor 
+@ApiModel(value="${tableInfo.comment}查询")
+public class $!{tableInfo.name}Query extends PageModel {
+
+#foreach($column in $tableInfo.fullColumn)
+    #if($column.name.startsWith("$timeKey") || $column.name.endsWith("$timeKey"))
+      #if(${column.comment})    @ApiModelProperty("$column.comment范围搜索。如果有值，是一个长度为2的数组。格式：[开始时间， 结束时间]")
+      #end
+      private List<${column.shortType}> $!{column.name};
+    #else 
+      #if(${column.comment})    @ApiModelProperty("$column.comment")
+      #end
+      private ${column.shortType} ${column.name};
+    #end
+
+#end
+
+}

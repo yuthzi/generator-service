@@ -1,0 +1,67 @@
+##定义初始变量
+#set($entityName = $tableInfo.name)
+#set($comment = $!{tableInfo.comment})
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+## 回调，设置文件名
+$!callback.setFileName($tool.append($tableInfo.url, "/", "api.ts"))
+##
+/*
+ * @Author: $!author
+ * @Date: $!time.currTime()
+ * @Description: $!{comment}
+ */
+import http from '@/utils/http'
+import type { PageRes } from '@/api/types'
+import type { ${entityName} } from './type'
+
+/**
+ * @description 获取$!{comment}分页列表(带搜索)
+ * @param {$!{entityName}.Req$!{entityName}List} params
+ * @returns {<PageRes<$!{entityName}.Res$!{entityName}List>>}
+ */
+export function get$!{entityName}List(params: $!{entityName}.Req$!{entityName}List) {
+  return http.post<PageRes<$!{entityName}.Res$!{entityName}List>>(
+    `/admin${tableInfo.url}/list`,
+    params,
+  )
+}
+
+/**
+ * @description 新增$!{comment}
+ * @param {$!{entityName}.ReqAdd$!{entityName}} params
+ * @returns {<PageRes<any>>}
+ */
+export function add$!{entityName}(params: $!{entityName}.ReqAdd$!{entityName}) {
+  return http.post<PageRes<any>>(`/admin${tableInfo.url}/add`, params)
+}
+
+/**
+ * @description: 编辑$!{comment}
+ * @param {$!{entityName}.ReqUpdate$!{entityName}} params
+ * @returns {<PageRes<any>>}
+ */
+export function update$!{entityName}(params: $!{entityName}.ReqUpdate$!{entityName}) {
+  return http.put<PageRes<any>>(`/admin${tableInfo.url}/modify`, params)
+}
+
+/**
+ * @description: 删除$!{comment}
+ * @param {string} id
+ * @returns {<PageRes<any>>}
+ */
+export function delete$!{entityName}ById(id: string) {
+  return http.delete<PageRes<any>>(`/admin${tableInfo.url}/remove/${id}`)
+}
+
+/**
+ * @description: 批量删除$!{comment}
+ * @param {string[]} ids
+ * @returns {<PageRes<any>>}
+ */
+export function batchDelete$!{entityName}(ids: string[]) {
+  return http.delete<PageRes<any>>(`/admin${tableInfo.url}/batchRemove`, ids)
+}

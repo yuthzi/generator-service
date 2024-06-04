@@ -1,0 +1,67 @@
+##定义初始变量
+#set($entityName = $tableInfo.name)
+#set($comment = $!{tableInfo.comment})
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+##
+## 回调，设置文件名
+$!callback.setFileName($tool.append($tableInfo.url, "/", "type.ts"))
+##
+## 定义获取js数据类型的宏
+#macro(getJsType $column)
+#if ($column.name.endsWith("status")) number | boolean#{elseif}($column.type.equals("java.lang.Integer") || $column.type.equals("java.lang.Short")) number#{else} string#end
+#end
+/*
+ * $!{comment}模型定义
+ * @Author: $!author
+ * @Date: $!time.currTime()
+ * @Description: $!{tableInfo.comment}
+ */
+import type { ReqPage } from '@/api/types'
+
+/*
+ * $!{comment}管理模块
+ */
+export namespace $!{entityName} {
+  export interface ReqAdd$!{entityName} {
+  #foreach($column in $tableInfo.otherColumn)
+    ## 过滤时间字段
+    #if(!($column.name.startsWith("$timeKey")))
+$!{column.name}?:#getJsType($column)
+#end
+  #end
+  }
+
+  export interface ReqUpdate$!{entityName} {
+  #foreach($column in $tableInfo.pkColumn)
+    $!column.name: string
+  #end
+  #foreach($column in $tableInfo.otherColumn)
+    ## 过滤时间字段
+    #if(!($column.name.startsWith("$timeKey")))
+$!{column.name}?:#getJsType($column)
+#end
+  #end
+  }
+
+  export interface Req$!{entityName}List extends ReqPage {
+  #foreach($column in $tableInfo.pkColumn)
+    $!column.name?: string
+  #end
+  #foreach($column in $tableInfo.otherColumn)
+    $!{column.name}?:#getJsType($column)
+  #end
+  }
+
+  export interface Res$!{entityName}List {
+  #foreach($column in $tableInfo.pkColumn)
+    $!column.name: string
+  #end
+  #foreach($column in $tableInfo.otherColumn)
+    $!{column.name}?:#getJsType($column)
+  #end
+  }
+}

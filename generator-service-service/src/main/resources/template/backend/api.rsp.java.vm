@@ -1,0 +1,31 @@
+package ${package};
+
+$tool.getColumnTypeImport($tableInfo.fullColumn)
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+/**
+ * $!{tableInfo.comment}列表响应模型
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+@Data
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor 
+@ApiModel(value="${tableInfo.comment}响应")
+public class $!{tableInfo.name}Rsp {
+
+#foreach($column in $tableInfo.fullColumn)
+    #if(${column.comment})    @ApiModelProperty("$column.comment")
+    #end
+    private ${column.shortType} $!{column.name};
+
+#end
+
+}

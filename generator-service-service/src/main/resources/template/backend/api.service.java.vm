@@ -1,0 +1,70 @@
+##定义初始变量
+#set($tableName = $tool.append($tableInfo.name, "Service"))
+#set($apiModelName = $tool.append($tableInfo.name, "Model"))
+#set($queryModelName = $tool.append($tableInfo.name, "Query"))
+#set($rspModelName = $tool.append($tableInfo.name, "Rsp"))
+
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+
+package ${package};
+
+import java.util.List;
+
+import $!{tableInfo.savePackageName}.service.model.rsp.ReturnList;
+
+import $!{tableInfo.savePackageName}.service.model.$!{apiModelName};
+import $!{tableInfo.savePackageName}.service.model.rsp.$!{rspModelName};
+import $!{tableInfo.savePackageName}.service.model.query.$!{queryModelName};
+
+
+/**
+ * $!{tableInfo.comment}($!{tableInfo.name})服务接口
+ *
+ * @author $!author
+ * @since $!time.currTime()
+ */
+public interface $!{tableName} {
+
+    #if($tableInfo.pkColumn.size()==1)
+        int add($!{apiModelName} model, boolean toGenId);
+        int batchAdd(List<$!{apiModelName}> models, boolean toGenId);
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+        int add($!{apiModelName} model);
+        int batchAdd(List<$!{apiModelName}> models);
+    #end
+   
+    int batchAddOrModify(List<$!{apiModelName}> models);
+    
+    int modify($!{apiModelName} model);
+   
+    int batchModify(List<$!{apiModelName}> models);
+     
+    int remove(#foreach($column in $tableInfo.pkColumn)
+           String $!column.name #if($velocityHasNext), #end  
+        #end);
+    
+    #if($tableInfo.pkColumn.size()==1)
+        int batchRemove(List<String> $!{pkName}s);
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+        int batchRemove(List<$!{apiModelName}> list);
+    #end
+    
+    $!{apiModelName} querySingle(#foreach($column in $tableInfo.pkColumn)
+           String $!column.name #if($velocityHasNext), #end  
+        #end);
+    
+    #if($tableInfo.pkColumn.size()==1)
+        List<$!{apiModelName}> queryByIds(List<String> $!{pkName}s);
+    #end
+    #if($tableInfo.pkColumn.size()>1)
+        List<$!{apiModelName}> queryByIds(List<$!{apiModelName}> list);
+    #end
+    
+    ReturnList<$!{tableInfo.name}Rsp> queryList($!{queryModelName} model);    
+}

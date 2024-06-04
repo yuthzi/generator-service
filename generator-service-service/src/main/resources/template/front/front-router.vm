@@ -1,0 +1,37 @@
+##定义初始变量
+#set($entityName = $tableInfo.name)
+#set($pathName = $tool.firstLowerCase($!{entityName}))
+#set($comment = $!{tableInfo.comment})
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+##
+## 回调，设置文件名
+$!callback.setFileName($tool.append($pathName, "Router.ts"))
+##
+export const routes = [
+{
+    // ${comment}管理
+    name: '$entityName',
+    path: '$tableInfo.url',
+    component: LAYOUT,
+    redirect: '$tableInfo.url/index',
+    meta: {
+      title: '$comment',
+      icon: 'User',
+    },
+    children: [
+      {
+        name: '${entityName}List',
+        path: '$tableInfo.url/index',
+        component: () => import('@/views$tableInfo.url/index.vue'),
+        meta: {
+          title: '${comment}列表',
+          icon: 'User',
+        },
+      },
+    ],
+  },
+]

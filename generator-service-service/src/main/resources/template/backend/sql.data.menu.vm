@@ -1,0 +1,28 @@
+##定义初始变量
+#set($entityName = $tableInfo.name)
+#set($comment = $!{tableInfo.comment})
+##拿到主键
+#if(!$tableInfo.pkColumn.isEmpty())
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+#set($pkName = $!{pk.name})
+## 回调，设置文件名
+$!callback.setFileName($tool.append($tableInfo.tableName, "_menu_data.sql"))
+##
+-- 菜单数据。${comment}
+INSERT INTO `t_menu` (`menu_id`, `pid`, `pattern`, `code`, `menu_name`, `level`, `type`, `gmt_create`, `gmt_modified`) VALUES ($rootMenuId, 0, '/admin${tableInfo.url}', '${entityName}', '${comment}管理', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu` (`menu_id`, `pid`, `pattern`, `code`, `menu_name`, `level`, `type`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuIdStart, 100), $rootMenuId, '/admin${tableInfo.url}/list', '${entityName}List', '${comment}列表', 2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu` (`menu_id`, `pid`, `pattern`, `code`, `menu_name`, `level`, `type`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuIdStart, 101), $math.add($menuIdStart, 100), '/admin${tableInfo.url}/list/add', 'btn.${entityName}.add', '添加', 3, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu` (`menu_id`, `pid`, `pattern`, `code`, `menu_name`, `level`, `type`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuIdStart, 102), $math.add($menuIdStart, 100), '/admin${tableInfo.url}/list/update', 'btn.${entityName}.update', '修改', 3, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu` (`menu_id`, `pid`, `pattern`, `code`, `menu_name`, `level`, `type`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuIdStart, 103), $math.add($menuIdStart, 100), '/admin${tableInfo.url}/list/remove', 'btn.${entityName}.remove', '删除', 3, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- 分配角色权限。${comment}
+INSERT INTO `t_menu_role` (`ref_id`, `menu_id`, `role_id`, `gmt_create`, `gmt_modified`) VALUES ($menuRoleIdStart, $rootMenuId, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu_role` (`ref_id`, `menu_id`, `role_id`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuRoleIdStart, 1), $math.add($menuIdStart, 100), $roleId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu_role` (`ref_id`, `menu_id`, `role_id`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuRoleIdStart, 2), $math.add($menuIdStart, 101), $roleId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu_role` (`ref_id`, `menu_id`, `role_id`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuRoleIdStart, 3), $math.add($menuIdStart, 102), $roleId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `t_menu_role` (`ref_id`, `menu_id`, `role_id`, `gmt_create`, `gmt_modified`) VALUES ($math.add($menuRoleIdStart, 4), $math.add($menuIdStart, 103), $roleId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+## 回调，设置ID初始值
+$!callback.putCustomKey("menuIdStart", $math.add($menuIdStart,100))
+$!callback.putCustomKey("menuRoleIdStart", $math.add($menuRoleIdStart, 5))

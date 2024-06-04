@@ -1,0 +1,63 @@
+{
+	"desc": "多模块，dao、service等单独模块。entityName默认由table解析。tableName是表名(去掉前缀)。frontSpliteEntityCamel=true表示前端保存路径里拆分实体的驼峰命名，每个驼峰对应一个文件夹",
+	"dbUrl": "jdbc:mysql://localhost:3306/db_yuth_tower?serverTimezone=UTC&useUnicode=true&allowMultiQueries=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&tinyInt1isBit=false",
+	"dbUsername": "root",
+	"dbPassword": "1234567",
+	"tableSchema": "db_sc_tower",
+	"tables": [
+		"t_sys_table"
+	],
+	"typeMappingPath": "/TypeMapping.xml",
+	"format": true,
+	"author": "yuth",
+	"tableRemovePre": "t_",
+	"basePackage0": "com.yuth.tower",
+	"saveDir0": "D:/tmp/1/",
+	"templateDir": "D:\\coding\\sts_workspace\\yuth-code-generator/data",
+	"customKeys": {
+		"timeKey": "gmt",
+		"tenantIdKey": "tenantId",
+		"roleId": 1,
+		"menuIdStart": 20000,
+		"menuRoleIdStart": 100
+	},
+	"properties": {
+		"backend.dir": "D:/coding/sts_workspace/generator-service",
+		"backend.dir0": "D:/tmp/1",
+		"front.dir": "D:/coding/vue/vue3-ts-admin-yuth",
+		"backend.service": "generator-service",
+		"backend.package.prefix": "com.yuth.tower",
+		"front.package.prefix": ""
+	},
+	"templates": [
+		{
+			"desc": "front-api-type",
+			"templatePath": "template/front/front-api-type.vm",
+			"savePath": "${front.dir}/src/api/${front.package.prefix}${entityFolder}/type.ts"
+		},
+		{
+			"desc": "front-api-index",
+			"templatePath": "template/front/front-api-index.vm",
+			"savePath": "${front.dir}/src/api/${front.package.prefix}${entityFolder}/api.ts"
+		},
+		{
+			"desc": "front-view-edit-dialog",
+			"templatePath": "template/front/front-view-edit-dialog.vm",
+			"fileSuffix": ".vue",
+			"packagePath": "",
+			"savePath": "${front.dir}/src/views/${entityFolder}/components/${entityName}EditDialog.vue"
+		},
+		{
+			"desc": "front-view-index",
+			"templatePath": "template/front/front-view-index.vm",
+			"savePath": "${front.dir}/src/views/${entityFolder}/index.vue"
+		},
+		{
+			"desc": "front-router",
+			"templatePath": "template/front/front-router.vm",
+			"fileSuffix": ".ts",
+			"packagePath": "",
+			"savePath": "${front.dir}/src/router/${entityFolder}/router.ts"
+		}
+	]
+}
