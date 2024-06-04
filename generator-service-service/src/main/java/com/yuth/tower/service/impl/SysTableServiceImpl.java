@@ -1,28 +1,39 @@
 package com.yuth.tower.service.impl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.yuth.tower.service.model.rsp.ReturnList;
 import com.github.pagehelper.Page;
-import com.yuth.tower.service.model.SysTableModel;
-import com.yuth.tower.service.model.rsp.SysTableRsp;
-import com.yuth.tower.service.model.query.SysTableQuery;
-
-import com.yuth.tower.service.api.SysTableService;
+import com.yuth.code.db.mgr.DBManager;
+import com.yuth.code.db.mgr.dto.Table;
+import com.yuth.code.utils.StringUtil;
 import com.yuth.tower.dao.entity.SysTableDO;
+import com.yuth.tower.dao.entity.ValueConst;
 import com.yuth.tower.dao.entity.query.SysTableQueryDO;
 import com.yuth.tower.dao.mapper.SysTableMapper;
+import com.yuth.tower.service.api.SysTableService;
 import com.yuth.tower.service.factory.SysTableFactory;
+import com.yuth.tower.service.model.SysTableModel;
+import com.yuth.tower.service.model.query.SysTableQuery;
+import com.yuth.tower.service.model.rsp.ReturnList;
+import com.yuth.tower.service.model.rsp.SysTableRsp;
 import com.yuth.tower.service.util.Const;
-
+import com.yuth.tower.service.util.DateUtil;
 import com.yuth.tower.service.util.PageUtil;
 import com.yuth.tower.service.util.PropertyUtil;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 表信息(SysTable)服务实现类
@@ -31,10 +42,17 @@ import lombok.RequiredArgsConstructor;
  * @since 2024-06-03 16:32:41
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SysTableServiceImpl implements SysTableService {
 
     private final SysTableMapper mapper;
+
+    private final DataSource dataSource;
+
+    @Value("${code.generator.schema}")
+    private String schema;
+
 
     @Override
     public int add(SysTableModel model, boolean toGenId) {
@@ -47,7 +65,7 @@ public class SysTableServiceImpl implements SysTableService {
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
+    @Transactional(rollbackFor = { Exception.class })
     public int batchAdd(List<SysTableModel> models, boolean toGenId) {
         if (models == null || models.isEmpty()) {
             return Const.DBSingleSuccess.NO;
@@ -58,7 +76,7 @@ public class SysTableServiceImpl implements SysTableService {
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
+    @Transactional(rollbackFor = { Exception.class })
     public int batchAddOrModify(List<SysTableModel> models) {
         if (models == null || models.isEmpty()) {
             return Const.DBBatchSize.EMPTY;
@@ -75,7 +93,7 @@ public class SysTableServiceImpl implements SysTableService {
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
+    @Transactional(rollbackFor = { Exception.class })
     public int batchModify(List<SysTableModel> models) {
         if (models == null || models.isEmpty()) {
             return Const.DBBatchSize.EMPTY;
@@ -125,4 +143,59 @@ public class SysTableServiceImpl implements SysTableService {
 
         return PageUtil.newRet(page, rspList);
     }
+
+    @Override
+    public void sync() {
+        Connection conn = DataSourceUtils.getConnection(dataSource);
+        List<Table> tables = null;
+        try {
+            tables = DBManager.getAllTable(conn, schema);
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException("获取表信息遇到问题：" + e.getMessage());
+        }
+
+        List<SysTableModel> models = new ArrayList<>(tables.size());
+        for (Table t : tables) {
+            SysTableModel m = new SysTableModel();
+            SysTableFactory.buildId4Bean(m);
+            m.setTableName(t.getTableName());
+            m.setEntityName(StringUtil.getCamelCaseString(t.getTableName(), true));
+            m.setMemo(t.getRemarks());
+            m.setGmtCreate(DateUtil.getNowDateTime());
+            m.setGmtModified(m.getGmtCreate());
+            m.setTenantId(ValueConst.TENANT_DEFUAL);
+
+            models.add(m);
+        }
+
+        batchAddOrModify(models);
+    }
+
+    // public void preview() {
+    // ConfigModel cfg = null;
+    // try {
+    // cfg = ConfigModel.parse("/genrator_config.json");
+    // } catch (IOException e) {
+    // log.error(e.getMessage(), e);
+    // throw new RuntimeException("获取生成器配置遇到问题：" + e.getMessage());
+    // }
+    //
+    // Connection conn = DataSourceUtils.getConnection(dataSource);
+    // List<Table> tables = null;
+    // try {
+    // tables = DBManager.getAllTable(conn, schema);
+    // } catch (SQLException e) {
+    // log.error(e.getMessage(), e);
+    // throw new RuntimeException("获取表信息遇到问题：" + e.getMessage());
+    // }
+    //
+    // try {
+    // CodeGenerator.gen(cfg, null);
+    // } catch (Exception e) {
+    // throw new RuntimeException("生成代码遇到问题：" + e.getMessage());
+    // }
+    //
+    // }
+
 }

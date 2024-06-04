@@ -2,11 +2,10 @@ package com.yuth.tower.service.api;
 
 import java.util.List;
 
-import com.yuth.tower.service.model.rsp.ReturnList;
-
 import com.yuth.tower.service.model.SysTableModel;
-import com.yuth.tower.service.model.rsp.SysTableRsp;
 import com.yuth.tower.service.model.query.SysTableQuery;
+import com.yuth.tower.service.model.rsp.ReturnList;
+import com.yuth.tower.service.model.rsp.SysTableRsp;
 
 /**
  * 表信息(SysTable)服务接口
@@ -35,4 +34,6 @@ public interface SysTableService {
     List<SysTableModel> queryByIds(List<String> tableIds);
 
     ReturnList<SysTableRsp> queryList(SysTableQuery model);
+
+    void sync();
 }
