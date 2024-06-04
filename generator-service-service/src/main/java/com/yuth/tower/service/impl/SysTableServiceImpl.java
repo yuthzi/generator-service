@@ -203,7 +203,7 @@ public class SysTableServiceImpl implements SysTableService {
             throw new RuntimeException("生成代码遇到问题：" + e.getMessage());
         }
 
-        List<GenResultModel> codes = pathMap.get(table.getTableName());
+        List<GenResultModel> codes = pathMap.get(entity.getTableName());
         List<CodeGenRsp> rspList = new ArrayList<>(codes.size());
         for (GenResultModel e : codes) {
             rspList.add(new CodeGenRsp(e.getName(), e.getCode()));
