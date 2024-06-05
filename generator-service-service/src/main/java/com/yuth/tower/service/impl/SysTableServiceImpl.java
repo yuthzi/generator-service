@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -56,11 +59,17 @@ public class SysTableServiceImpl implements SysTableService {
 
     private final DataSource dataSource;
 
-    @Value("${code.generator.schema}")
+    @Value("${generator.code.schema}")
     private String schema;
 
-    @Value("${tmp.dir}")
+    @Value("${generator.tmp.dir}")
     private String tmpDir;
+
+    @Value("${generator.table.ignore:}")
+    private String ignoreTable;
+
+    @Value("${generator.template.dir:/}")
+    private String templateDir;
 
 
     @Override
@@ -163,12 +172,22 @@ public class SysTableServiceImpl implements SysTableService {
             throw new RuntimeException("获取表信息遇到问题：" + e.getMessage(), e);
         }
 
+        ConfigModel cfg = getConfig();
+
+        Set<String> ignore = getIgnoreTable();
         List<SysTableModel> models = new ArrayList<>(tables.size());
         for (Table t : tables) {
+            if (ignore.contains(t.getTableName())) {
+                continue;
+            }
+
             SysTableModel m = new SysTableModel();
             SysTableFactory.buildId4Bean(m);
             m.setTableName(t.getTableName());
-            m.setEntityName(StringUtil.getCamelCaseString(t.getTableName(), true));
+
+            String entityName = StringUtil.removePrefix(t.getTableName(), cfg.getTableRemovePre());
+            entityName = StringUtil.getCamelCaseString(entityName, true);
+            m.setEntityName(entityName);
             m.setMemo(t.getRemarks());
             m.setGmtCreate(DateUtil.getNowDateTime());
             m.setGmtModified(m.getGmtCreate());
@@ -200,7 +219,7 @@ public class SysTableServiceImpl implements SysTableService {
         try {
             pathMap = CodeGenerator.gen(cfg, Collections.singletonList(entity));
         } catch (Exception e) {
-            throw new RuntimeException("生成代码遇到问题：" + e.getMessage());
+            throw new RuntimeException("生成代码遇到问题：" + e.getMessage(), e);
         }
 
         List<GenResultModel> codes = pathMap.get(entity.getTableName());
@@ -214,10 +233,19 @@ public class SysTableServiceImpl implements SysTableService {
 
     private ConfigModel getConfig() {
         try {
-            return ConfigModel.parse("/genrator_config.json");
+
+            ConfigModel cfg = ConfigModel.parse("/genrator_config.json");
+            cfg.setTemplateDir(templateDir);
+
+            return cfg;
         } catch (IOException e) {
             throw new RuntimeException("获取生成器配置遇到问题：" + e.getMessage(), e);
         }
+    }
 
+    private Set<String> getIgnoreTable() {
+        String[] cols = ignoreTable.split(",\\s*");
+
+        return new HashSet<>(Arrays.asList(cols));
     }
 }

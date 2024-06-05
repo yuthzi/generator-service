@@ -14,7 +14,6 @@
 	"tableRemovePre": "t_",
 	"basePackage0": "com.yuth.tower",
 	"saveDir0": "D:/tmp/1/",
-	"templateDir": "D:\\coding\\sts_workspace\\yuth-code-generator/data",
 	"customKeys": {
 		"timeKey": "gmt",
 		"tenantIdKey": "tenantId",
